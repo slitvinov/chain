@@ -30,10 +30,10 @@ force(struct params *C, int n, real *r, real *f)
 		k = i + 2;
 		l = i + 3;
 		fdihedral0(C->kd, 
-			r[3*i], r[3*i + 1], r[3*i + 2], 
-			r[3*j], r[3*j + 1], r[3*j + 2], 
-			r[3*k], r[3*k + 1], r[3*k + 2],
-		    	r[3*l], r[3*l + 1], r[3*l + 2],
+		    r[3*i], r[3*i + 1], r[3*i + 2], 
+		    r[3*j], r[3*j + 1], r[3*j + 2], 
+		    r[3*k], r[3*k + 1], r[3*k + 2],
+		    r[3*l], r[3*l + 1], r[3*l + 2],
 		    &f[3*i], &f[3*i + 1], &f[3*i + 2], &f[3*j], &f[3*j + 1], &f[3*j + 2], &f[3*k], &f[3*k + 1], &f[3*k + 2], &f[3*l], &f[3*l + 1], &f[3*l + 2]);
 	}
 }
@@ -46,12 +46,13 @@ main(void)
 	int n;
 	int N;
 	real *r;
+	real *rp;
 	real *f;
 	real t[3];
 	real dt;
 
 	struct params C =  {
-		.kb = 1.0, .r0 = 1.0, .kth = 0.01, .th0 = 160 *  3.141592 / 180, .kd = -1e-4		};
+		.kb = 1.0, .r0 = 1.0, .kth = 0.01, .th0 = 160 *  3.141592 / 180, .kd = -1e-4			};
 	r = NULL;
 	n = N = 0;
 	while (scanf("%lf %lf %lf", &t[0], &t[1], &t[2]) == 3) {
@@ -69,16 +70,21 @@ main(void)
 		n++;
 	}
 	srand(1234);
-	dt = 0.25;
+	dt = 0.1;
 	f = malloc(3 * n * sizeof *f);
+	rp = malloc(3 * n * sizeof *f);
 	if (f == NULL) {
 		fprintf(stderr, "malloc failed\n");
 		exit(1);
 	}
+	for (i = 0; i < 3 * n; i++)
+		f[i] = 0;
 	for (j = 0; j < 100000000; j++) {
 		for (i = 0; i < 3 * n; i++)
+			rp[i] = r[i] + dt * f[i] / 2;
+		for (i = 0; i < 3 * n; i++)
 			f[i] = 0;
-		force(&C,n, r, f);
+		force(&C,n, rp, f);
 		for (i = 0; i < 3 * n; i++)
 			r[i] += dt * f[i];
 		if (j % 100000 == 0) {
@@ -88,5 +94,6 @@ main(void)
 		}
 	}
 	free(r);
+	free(rp);
 	free(f);
 }
