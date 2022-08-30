@@ -4,18 +4,6 @@
 #include "energy.h"
 #include "force.h"
 
-static real
-uniform0(void)
-{
-	return (real)rand()/(real)RAND_MAX;
-}
-
-static real
-uniform(void)
-{
-	return 2 * uniform0() - 1;
-}
-
 static void
 force(struct params *C, int m, real *r0, int *connect, real *r, real *f)
 {
@@ -43,17 +31,12 @@ main(void)
 	int m;
 	int N;
 	int M;
-	real alpha;
-	real E;
-	real Es;
-	real dE;
 	real *r;
 	real *f;
 	real t[3];
 	real dt;
 	real *r0;
 	real r00;
-	real *tmp;
 	int *connect;
 	FILE *file;
 	char *path = "connect";

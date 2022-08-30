@@ -21,7 +21,6 @@ eng(struct params *C, int m, int *connect, real *r)
 	int q;
 	int i;
 	int j;
-	int k;
 	real E;
 
 	E = 0;

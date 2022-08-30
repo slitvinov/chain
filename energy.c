@@ -77,7 +77,7 @@ eangle(struct params *C, real x0, real y0, real z0, real x1, real y1, real z1, r
 }
 
 real
-edihedral(struct params *C, real x0, real y0, real z0,
+edihedral0(real kd, real x0, real y0, real z0,
 real x1, real y1, real z1,
 real x2, real y2, real z2,
 real x3, real y3, real z3)
@@ -145,7 +145,7 @@ real x3, real y3, real z3)
 	if (c > 1.0) c = 1.0;
 	if (c < -1.0) c = -1.0;
 
-	return C->kd * c;
+	return kd * c;
 }
 
 #include <math.h>

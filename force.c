@@ -142,7 +142,6 @@ real *fx3, real *fy3, real *fz3
 	real dthx;
 	real dthy;
 	real dthz;
-	real dx;
 	real f1[3];
 	real f2[3];
 	real f3[3];
@@ -161,7 +160,6 @@ real *fx3, real *fy3, real *fz3
 	real rg;
 	real rginv;
 	real rgsq;
-	real s;
 	real sx2;
 	real sy2;
 	real sz2;
@@ -178,6 +176,7 @@ real *fx3, real *fy3, real *fz3
 	real vb3y;
 	real vb3z;
 	real df1;
+	real s;
 
 
 	vb1x = x0 - x1;
@@ -242,7 +241,7 @@ real *fx3, real *fy3, real *fz3
 	dthy = gbb * by;
 	dthz = gbb * bz;
 
-	df = - kth * df1;
+	df = kth * s;
 
 	sx2 = df * dtgx;
 	sy2 = df * dtgy;
