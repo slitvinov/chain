@@ -37,7 +37,7 @@ fbond0(real kb, real r0, real x0, real y0, real z0, real x1, real y1, real z1, r
 }
 
 void
-fangle(real kth, real th0, real x0, real y0, real z0, real x1, real y1, real z1, real x2, real y2, real z2,
+fangle0(real kth, real th0, real x0, real y0, real z0, real x1, real y1, real z1, real x2, real y2, real z2,
 real *fx0, real *fy0, real *fz0,
 real *fx1, real *fy1, real *fz1,
 real *fx2, real *fy2, real *fz2
@@ -115,7 +115,7 @@ real *fx2, real *fy2, real *fz2
 }
 
 void
-fdihedral(real kth, real x0, real y0, real z0,
+fdihedral0(real kth, real x0, real y0, real z0,
 real x1, real y1, real z1,
 real x2, real y2, real z2,
 real x3, real y3, real z3,

@@ -33,7 +33,7 @@ ebond(struct params *C, real x0, real y0, real z0, real x1, real y1, real z1)
 
 
 real
-eangle(struct params *C, real x0, real y0, real z0, real x1, real y1, real z1, real x2, real y2, real z2)
+eangle0(real kth, real th0, real x0, real y0, real z0, real x1, real y1, real z1, real x2, real y2, real z2)
 {
 	real c;
 	real dtheta;
@@ -66,8 +66,14 @@ eangle(struct params *C, real x0, real y0, real z0, real x1, real y1, real z1, r
 	if (c > 1.0) c = 1.0;
 	if (c < -1.0) c = -1.0;
 
-	dtheta = Acos(c) - C->th0;
-	return C->kth * dtheta * dtheta;
+	dtheta = Acos(c) - th0;
+	return kth * dtheta * dtheta;
+}
+
+real
+eangle(struct params *C, real x0, real y0, real z0, real x1, real y1, real z1, real x2, real y2, real z2)
+{
+	return eangle0(C->kth, C->th0, x0, y0, z0, x1, y1, z1, x2, y2, z2);
 }
 
 real
