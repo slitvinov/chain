@@ -8,7 +8,7 @@
 static real Sqrt(real);
 static real Acos(real);
 real
-ebond(struct params *C, real x0, real y0, real z0, real x1, real y1, real z1)
+ebond0(real kb, real r0, real x0, real y0, real z0, real x1, real y1, real z1)
 {
 	real dx;
 	real dy;
@@ -20,9 +20,17 @@ ebond(struct params *C, real x0, real y0, real z0, real x1, real y1, real z1)
 	dy = y0 - y1;
 	dz = z0 - z1;
 	rsq = dx*dx + dy * dy + dz * dz;
-	th = Sqrt(rsq) - C->r0;
-	return C->kb * th * th;
+	th = Sqrt(rsq) - r0;
+	return kb * th * th;
 }
+
+
+real
+ebond(struct params *C, real x0, real y0, real z0, real x1, real y1, real z1)
+{
+	return ebond0(C->kb, C->r0, x0, y0, z0, x1, y1, z1);
+}
+
 
 real
 eangle(struct params *C, real x0, real y0, real z0, real x1, real y1, real z1, real x2, real y2, real z2)

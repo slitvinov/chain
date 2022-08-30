@@ -2,10 +2,12 @@
 .SUFFIXES:
 .SUFFIXES: .c .o
 
-0 = main.o energy.o
-main: $0
-	$(CC) $(LDFLAGS) $0 -o $@ -lm
+all: main double
+0 = main.o energy.o force.o
+1 = double.o energy.o
+main: $0; $(CC) $(LDFLAGS) $0 -o $@ -lm
+double: $1; $(CC) $(LDFLAGS) $1 -o $@ -lm
 .c.o:
 	$(CC) $(CFLAGS) -c $<
 clean:
-	rm -f main $0
+	rm -f main double $0 $1

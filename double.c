@@ -2,7 +2,6 @@
 #include <stdlib.h>
 #include <math.h>
 #include "energy.h"
-#include "force.h"
 
 static real
 uniform0(void)
@@ -16,20 +15,23 @@ uniform(void)
 	return 2 * uniform0() - 1;
 }
 
-static void
-force(struct params *C, int m, real *r0, int *connect, real *r, real *f)
+static real
+eng(struct params *C, int m, int *connect, real *r)
 {
 	int q;
 	int i;
 	int j;
+	int k;
+	real E;
 
+	E = 0;
 	for (q = 0; q  < m; q++) {
 		i = connect[2* q];
 		j = connect[2 * q + 1];
-		fbond0(C->kb, r0[q], r[3*i], r[3*i + 1], r[3*i + 2], r[3*j], r[3*j + 1], r[3*j + 2],
-							&f[3*i], &f[3*i + 1], &f[3*i + 2], &f[3*j], &f[3*j + 1], &f[3*j + 2]);
+		E += ebond0(C->kb, C->r0, r[3*i], r[3*i + 1], r[3*i + 2], r[3*j], r[3*j + 1], r[3*j + 2]);
 	}
 
+	return E;
 }
 
 int
@@ -48,11 +50,9 @@ main(void)
 	real Es;
 	real dE;
 	real *r;
-	real *f;
+	real *s;
 	real t[3];
-	real dt;
-	real *r0;
-	real r00;
+	real Temp;
 	real *tmp;
 	int *connect;
 	FILE *file;
@@ -77,42 +77,47 @@ main(void)
 		n++;
 	}
 	connect = NULL;
-	r0 = NULL;
 	file = fopen(path, "r");
 	if (file == NULL) {
 		fprintf(stderr, "fail to open '%s'\n", path);
 		exit(1);
 	}
 	m = M = 0;
-	while (fscanf(file, "%d %d %lf\n", &c0, &c1, &r00) == 3) {
+	while (fscanf(file, "%d %d\n", &c0, &c1) == 2) {
 		if (m == M) {
 			M = 2 * n + 1;
 			connect = realloc(connect, 2 * M * sizeof *connect);
-			r0 = realloc(r0, M * sizeof *r0);
 		}
 		connect[2 * m] = c0;
 		connect[2 * m + 1] =c1;
-		r0[m] = r00;
 		m++;
 	}
 	fclose(file);
 	fprintf(stderr, "nm: %d %d\n", n, m);
 	srand(1234);
-	dt = 0.1;
-	f = malloc(3 * n * sizeof *f);
-	for (j = 0; j < 10000; j++) {
+	alpha = 0.01;
+	Temp = 0.0001;
+	s = malloc(3 * n * sizeof *s);
+	E = eng(&C, m, connect, r);
+	for (j = 0; j < 10000000; j++) {
 		for (i = 0; i < 3 * n; i++)
-			f[i] = 0;
-		force(&C, m, r0, connect, r, f);
-		for (i = 0; i < 3 * n; i++)
-			r[i] += dt * f[i];
-		if (j % 100 == 0) {
+			s[i] = r[i] + alpha * uniform();
+		Es = eng(&C, m, connect, s);
+		dE = Es - E;
+		if (dE < 0 || uniform0() < exp(-dE/Temp)  ) {
+			tmp = s;
+			s = r;
+			r = tmp;
+			E = Es;
+		}
+		if (j % 100000 == 0) {
 			for (i = 0; i < n; i++)
 				printf("%.16e %.16e %.16e\n", r[3*i], r[3*i + 1], r[3*i + 2]);
 			printf("\n");
+			fprintf(stderr, "Eng: %g %g\n", E, dE);
 		}
 	}
 	free(r);
-	free(f);
+	free(s);
 	free(connect);
 }
