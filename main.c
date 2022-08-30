@@ -5,34 +5,34 @@
 #define TOLERANCE (0.05)
 
 typedef double real;
-static real ebond(real, real, real, real, real, real);
-static real eangle(real, real, real, real, real, real, real, real, real);
-static real edihedral(real, real, real,
-real, real, real,
-real, real, real,
-real, real, real);
-
-static struct {
+struct params {
 	real kb;
 	real kd;
 	real kth;
 	real r0;
 	real th0;
-} C = {
-	.kb = 1.0, .r0 = 2.0, .kth = 3.0, .th0 = 4.0, .kd = 5.0 };
+};
+real ebond(struct params*, real, real, real, real, real, real);
+real eangle(struct params*, real, real, real, real, real, real, real, real, real);
+real edihedral(struct params*, real, real, real,
+real, real, real,
+real, real, real,
+real, real, real);
+
+static struct params C  = {.kb = 1.0, .r0 = 2.0, .kth = 3.0, .th0 = 4.0, .kd = 5.0 };
 
 int
 main(void)
 {
-	printf("ebond: %g\n", ebond(1, 2, 3, 4, 5, 6));
-	printf("eangle: %g\n", eangle(1, 2, 3, 4, 5, 6, 7, 8, 9));
-	printf("edihedral: %g\n", edihedral(5, 2, 3, 4, 8, 6, 7, 8, 9, 10, 11, 12));
+	printf("ebond: %g\n", ebond(&C, 1, 2, 3, 4, 5, 6));
+	printf("eangle: %g\n", eangle(&C, 1, 2, 3, 4, 5, 6, 7, 8, 9));
+	printf("edihedral: %g\n", edihedral(&C, 5, 2, 3, 4, 8, 6, 7, 8, 9, 10, 11, 12));
 }
 
-real Sqrt(real);
-real Acos(real);
-static real
-ebond(real x0, real y0, real z0, real x1, real y1, real z1)
+static real Sqrt(real);
+static real Acos(real);
+real
+ebond(struct params *C, real x0, real y0, real z0, real x1, real y1, real z1)
 {
 	real dx;
 	real dy;
@@ -43,12 +43,12 @@ ebond(real x0, real y0, real z0, real x1, real y1, real z1)
 	dy = y0 - y1;
 	dz = z0 - z1;
 	rsq = dx*dx + dy * dy + dz * dz;
-	return C.kb * (Sqrt(rsq) - C.r0);
+	return C->kb * (Sqrt(rsq) - C->r0);
 }
 
 
-static real
-eangle(real x0, real y0, real z0, real x1, real y1, real z1, real x2, real y2, real z2)
+real
+eangle(struct params *C, real x0, real y0, real z0, real x1, real y1, real z1, real x2, real y2, real z2)
 {
 	real c;
 	real dtheta;
@@ -81,12 +81,12 @@ eangle(real x0, real y0, real z0, real x1, real y1, real z1, real x2, real y2, r
 	if (c > 1.0) c = 1.0;
 	if (c < -1.0) c = -1.0;
 
-	dtheta = Acos(c) - C.th0;
-	return C.kth * dtheta * dtheta;
+	dtheta = Acos(c) - C->th0;
+	return C->kth * dtheta * dtheta;
 }
 
-static real
-edihedral(real x0, real y0, real z0,
+real
+edihedral(struct params *C, real x0, real y0, real z0,
 real x1, real y1, real z1,
 real x2, real y2, real z2,
 real x3, real y3, real z3)
@@ -154,7 +154,7 @@ real x3, real y3, real z3)
 	if (c > 1.0) c = 1.0;
 	if (c < -1.0) c = -1.0;
 
-	return C.kd * c;
+	return C->kd * c;
 }
 
 #include <math.h>
