@@ -115,7 +115,7 @@ real *fx2, real *fy2, real *fz2
 }
 
 void
-fdihedral(real kd, real x0, real y0, real z0,
+fdihedral(real kth, real x0, real y0, real z0,
 real x1, real y1, real z1,
 real x2, real y2, real z2,
 real x3, real y3, real z3,
@@ -132,11 +132,39 @@ real *fx3, real *fy3, real *fz3
 	real by;
 	real bz;
 	real c;
+	real df;
+	real dtfx;
+	real dtfy;
+	real dtfz;
+	real dtgx;
+	real dtgy;
+	real dtgz;
+	real dthx;
+	real dthy;
+	real dthz;
+	real dx;
+	real f1[3];
+	real f2[3];
+	real f3[3];
+	real f4[3];
+	real fg;
+	real fga;
+	real gaa;
+	real gbb;
+	real hg;
+	real hgb;
 	real ra2inv;
 	real rabinv;
 	real rasq;
 	real rb2inv;
 	real rbsq;
+	real rg;
+	real rginv;
+	real rgsq;
+	real s;
+	real sx2;
+	real sy2;
+	real sz2;
 	real vb1x;
 	real vb1y;
 	real vb1z;
@@ -149,6 +177,8 @@ real *fx3, real *fy3, real *fz3
 	real vb3x;
 	real vb3y;
 	real vb3z;
+	real df1;
+
 
 	vb1x = x0 - x1;
 	vb1y = y0 - y1;
@@ -174,19 +204,81 @@ real *fx3, real *fy3, real *fz3
 	by = vb3z*vb2xm - vb3x*vb2zm;
 	bz = vb3x*vb2ym - vb3y*vb2xm;
 
-	rasq = ax*ax + ay*ay + az*az;
-	rbsq = bx*bx + by*by + bz*bz;
-	ra2inv = rb2inv = 0.0;
-	if (rasq > 0) ra2inv = 1.0/rasq;
-	if (rbsq > 0) rb2inv = 1.0/rbsq;
-	rabinv = Sqrt(ra2inv*rb2inv);
+	rasq = ax * ax + ay * ay + az * az;
+	rbsq = bx * bx + by * by + bz * bz;
+	rgsq = vb2xm * vb2xm + vb2ym * vb2ym + vb2zm * vb2zm;
+	rg = Sqrt(rgsq);
+
+	rginv = ra2inv = rb2inv = 0.0;
+	if (rg > 0) rginv = 1.0 / rg;
+	if (rasq > 0) ra2inv = 1.0 / rasq;
+	if (rbsq > 0) rb2inv = 1.0 / rbsq;
+	rabinv = Sqrt(ra2inv * rb2inv);
+
 	c = (ax*bx + ay*by + az*bz)*rabinv;
+	s = rg * rabinv * (ax * vb3x + ay * vb3y + az * vb3z);
+
 	if (c > 1.0 + TOLERANCE || c < (-1.0 - TOLERANCE)) {
 		fprintf(stderr, "dihedral: tolerance\n");
 		exit(2);
 	}
 	if (c > 1.0) c = 1.0;
 	if (c < -1.0) c = -1.0;
+
+	fg = vb1x * vb2xm + vb1y * vb2ym + vb1z * vb2zm;
+	hg = vb3x * vb2xm + vb3y * vb2ym + vb3z * vb2zm;
+	fga = fg * ra2inv * rginv;
+	hgb = hg * rb2inv * rginv;
+	gaa = -ra2inv * rg;
+	gbb = rb2inv * rg;
+
+	dtfx = gaa * ax;
+	dtfy = gaa * ay;
+	dtfz = gaa * az;
+	dtgx = fga * ax - hgb * bx;
+	dtgy = fga * ay - hgb * by;
+	dtgz = fga * az - hgb * bz;
+	dthx = gbb * bx;
+	dthy = gbb * by;
+	dthz = gbb * bz;
+
+	df = - kth * df1;
+
+	sx2 = df * dtgx;
+	sy2 = df * dtgy;
+	sz2 = df * dtgz;
+
+	f1[0] = df * dtfx;
+	f1[1] = df * dtfy;
+	f1[2] = df * dtfz;
+
+	f2[0] = sx2 - f1[0];
+	f2[1] = sy2 - f1[1];
+	f2[2] = sz2 - f1[2];
+
+	f4[0] = df * dthx;
+	f4[1] = df * dthy;
+	f4[2] = df * dthz;
+
+	f3[0] = -sx2 - f4[0];
+	f3[1] = -sy2 - f4[1];
+	f3[2] = -sz2 - f4[2];
+
+	*fx0 += f1[0];
+	*fy0 += f1[1];
+	*fz0 += f1[2];
+
+	*fx1 += f2[0];
+	*fy1 += f2[1];
+	*fz1+= f2[2];
+
+	*fx2+= f3[0];
+	*fy2 += f3[1];
+	*fz2 += f3[2];
+
+	*fx3 += f4[0];
+	*fy3 += f4[1];
+	*fz3 += f4[2];
 }
 
 
