@@ -145,7 +145,7 @@ real x3, real y3, real z3)
 	if (c > 1.0) c = 1.0;
 	if (c < -1.0) c = -1.0;
 
-	return kd * c;
+	return kd * (1 + c);
 }
 
 #include <math.h>

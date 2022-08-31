@@ -1,6 +1,6 @@
 awk 'BEGIN {
-	n = 35
+	n = 50
 	pi = 3.1415926
 	for (i = 0; i < n; i++)
-		print i, 5*sin(2 * pi * i/n), 5*sin(2 * pi * i / n + pi/2)
+		print i, sin(2 * pi * i/n),  cos(2 * pi * i / n)
 }'
