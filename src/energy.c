@@ -3,10 +3,16 @@
 #include "energy.h"
 
 #define SMALL (0.001)
+#define SMALLER   (0.00001)
 #define TOLERANCE (0.05)
+#define MY_PI (3.14159265358979323846)
 
-static real Sqrt(real);
+static real Fabs(real);
 static real Acos(real);
+static real Sin(real);
+static real Max(real, real);
+static real Sqrt(real);
+
 real
 ebond0(real kb, real r0, real x0, real y0, real z0, real x1, real y1, real z1)
 {
@@ -77,24 +83,37 @@ eangle(struct params *C, real x0, real y0, real z0, real x1, real y1, real z1, r
 }
 
 real
-edihedral0(real kd, real x0, real y0, real z0,
+edihedral0(real kd, real phi0, real x0, real y0, real z0,
 real x1, real y1, real z1,
 real x2, real y2, real z2,
 real x3, real y3, real z3)
 {
-	real ax;
-	real ay;
-	real az;
-	real bx;
-	real by;
-	real bz;
+	real b1mag;
+	real b2mag;
+	real b2mag2;
+	real b3mag;
+	real b3mag2;
 	real c;
-	real ra2inv;
-	real rabinv;
-	real rasq;
-	real rb2inv;
-	real rbsq;
-	real vb1x;
+	real c0;
+	real c1mag;
+	real c2mag;
+	real ctmp;
+	real cx;
+	real cy;
+	real cz;
+	real dphi;
+	real p;
+	real phi;
+	real r12c1;
+	real r12c2;
+	real rb1;
+	real rb3;
+	real s12;
+	real sb1;
+	real sb3;
+	real sc1;
+	real sc2;
+	real sin2;
 	real vb1y;
 	real vb1z;
 	real vb2x;
@@ -106,6 +125,11 @@ real x3, real y3, real z3)
 	real vb3x;
 	real vb3y;
 	real vb3z;
+	real dx;
+	real cmag;
+	real si;
+	real b1mag2;
+	real vb1x;
 
 	vb1x = x0 - x1;
 	vb1y = y0 - y1;
@@ -122,30 +146,77 @@ real x3, real y3, real z3)
 	vb3x = x3 - x2;
 	vb3y = y3 - y2;
 	vb3z = z3 - z2;
-	// c,s calculation
 
-	ax = vb1y*vb2zm - vb1z*vb2ym;
-	ay = vb1z*vb2xm - vb1x*vb2zm;
-	az = vb1x*vb2ym - vb1y*vb2xm;
-	bx = vb3y*vb2zm - vb3z*vb2ym;
-	by = vb3z*vb2xm - vb3x*vb2zm;
-	bz = vb3x*vb2ym - vb3y*vb2xm;
+	// c0 calculation
 
-	rasq = ax*ax + ay*ay + az*az;
-	rbsq = bx*bx + by*by + bz*bz;
-	ra2inv = rb2inv = 0.0;
-	if (rasq > 0) ra2inv = 1.0/rasq;
-	if (rbsq > 0) rb2inv = 1.0/rbsq;
-	rabinv = Sqrt(ra2inv*rb2inv);
-	c = (ax*bx + ay*by + az*bz)*rabinv;
+	sb1 = 1.0 / (vb1x*vb1x + vb1y*vb1y + vb1z*vb1z);
+	sb3 = 1.0 / (vb3x*vb3x + vb3y*vb3y + vb3z*vb3z);
+
+	rb1 = Sqrt(sb1);
+	rb3 = Sqrt(sb3);
+
+	c0 = (vb1x*vb3x + vb1y*vb3y + vb1z*vb3z) * rb1*rb3;
+
+	// 1st and 2nd angle
+
+	b1mag2 = vb1x*vb1x + vb1y*vb1y + vb1z*vb1z;
+	b1mag = Sqrt(b1mag2);
+	b2mag2 = vb2x*vb2x + vb2y*vb2y + vb2z*vb2z;
+	b2mag = Sqrt(b2mag2);
+	b3mag2 = vb3x*vb3x + vb3y*vb3y + vb3z*vb3z;
+	b3mag = Sqrt(b3mag2);
+
+	ctmp = vb1x*vb2x + vb1y*vb2y + vb1z*vb2z;
+	r12c1 = 1.0 / (b1mag*b2mag);
+	c1mag = ctmp * r12c1;
+
+	ctmp = vb2xm*vb3x + vb2ym*vb3y + vb2zm*vb3z;
+	r12c2 = 1.0 / (b2mag*b3mag);
+	c2mag = ctmp * r12c2;
+
+	// cos and sin of 2 angles and final c
+
+	sin2 = Max(1.0 - c1mag*c1mag,0.0);
+	sc1 = Sqrt(sin2);
+	if (sc1 < SMALL) sc1 = SMALL;
+	sc1 = 1.0/sc1;
+
+	sin2 = Max(1.0 - c2mag*c2mag,0.0);
+	sc2 = Sqrt(sin2);
+	if (sc2 < SMALL) sc2 = SMALL;
+	sc2 = 1.0/sc2;
+
+	s12 = sc1 * sc2;
+	c = (c0 + c1mag*c2mag) * s12;
+
+	cx = vb1y*vb2z - vb1z*vb2y;
+	cy = vb1z*vb2x - vb1x*vb2z;
+	cz = vb1x*vb2y - vb1y*vb2x;
+	cmag = Sqrt(cx*cx + cy*cy + cz*cz);
+	dx = (cx*vb3x + cy*vb3y + cz*vb3z)/cmag/b3mag;
+
+	// error check
+
 	if (c > 1.0 + TOLERANCE || c < (-1.0 - TOLERANCE)) {
-		fprintf(stderr, "dihedral: tolerance\n");
-		exit(2);
+		fprintf(stderr, "error tollerance\n");
+		exit(1);
 	}
+
+
 	if (c > 1.0) c = 1.0;
 	if (c < -1.0) c = -1.0;
 
-	return kd * (1 + c);
+	phi =Acos(c);
+	if (dx > 0.0) phi *= -1.0;
+	si = Sin(phi);
+	if (Fabs(si) < SMALLER) si = SMALLER;
+
+	dphi = phi - phi0;
+	if (dphi > MY_PI) dphi -= 2*MY_PI;
+	else if (dphi < -MY_PI) dphi += 2*MY_PI;
+	p = kd*dphi;
+	p = p * dphi;
+	return p;
 }
 
 #include <math.h>
@@ -159,4 +230,22 @@ real
 Acos(real x)
 {
 	return acos(x);
+}
+
+real
+Sin(real x)
+{
+	return sin(x);
+}
+
+real
+Max(real x, real y)
+{
+	return x > y ? x : y;
+}
+
+real
+Fabs(real x)
+{
+	return x > 0 ? x : -x;
 }

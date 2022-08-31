@@ -49,26 +49,26 @@ main()
 	y3 = 19;
 	z3 = 22;
 
-	E0 = edihedral0(0.5, x0, y0, z0, x1, y1, z1, x2, y2, z2, x3, y3, z3);
+	E0 = edihedral0(0.5, 0.6, x0, y0, z0, x1, y1, z1, x2, y2, z2, x3, y3, z3);
 
-	E1x = edihedral0(0.5, x0 + h, y0, z0, x1, y1, z1, x2, y2, z2, x3, y3, z3);
-	E1y = edihedral0(0.5, x0, y0 + h, z0, x1, y1, z1, x2, y2, z2, x3, y3, z3);
-	E1z = edihedral0(0.5, x0, y0, z0 + h, x1, y1, z1, x2, y2, z2, x3, y3, z3);
+	E1x = edihedral0(0.5, 0.6, x0 + h, y0, z0, x1, y1, z1, x2, y2, z2, x3, y3, z3);
+	E1y = edihedral0(0.5, 0.6, x0, y0 + h, z0, x1, y1, z1, x2, y2, z2, x3, y3, z3);
+	E1z = edihedral0(0.5, 0.6, x0, y0, z0 + h, x1, y1, z1, x2, y2, z2, x3, y3, z3);
 	printf("%.16e %.16e %.16e\n", -(E1x - E0)/h, -(E1y - E0)/h, -(E1z - E0)/h);
-	fdihedral0(0.5, x0, y0, z0, x1, y1, z1, x2, y2, z2, x3, y3, z3, &fx0, &fy0, &fz0, &fx1, &fy1, &fz1, &fx2, &fy2, &fz2, &fx3, &fy3, &fz3);
+	fdihedral0(0.5, 0.6, x0, y0, z0, x1, y1, z1, x2, y2, z2, x3, y3, z3, &fx0, &fy0, &fz0, &fx1, &fy1, &fz1, &fx2, &fy2, &fz2, &fx3, &fy3, &fz3);
 	printf("%.16e %.16e %.16e\n", fx0, fy0, fz0);
 	printf("\n");
 
-	E1x = edihedral0(0.5, x0, y0, z0, x1 + h, y1, z1, x2, y2, z2, x3, y3, z3);
-	E1y = edihedral0(0.5, x0, y0, z0, x1, y1 + h, z1, x2, y2, z2, x3, y3, z3);
-	E1z = edihedral0(0.5, x0, y0, z0, x1, y1, z1 + h, x2, y2, z2, x3, y3, z3);
+	E1x = edihedral0(0.5, 0.6, x0, y0, z0, x1 + h, y1, z1, x2, y2, z2, x3, y3, z3);
+	E1y = edihedral0(0.5, 0.6, x0, y0, z0, x1, y1 + h, z1, x2, y2, z2, x3, y3, z3);
+	E1z = edihedral0(0.5, 0.6, x0, y0, z0, x1, y1, z1 + h, x2, y2, z2, x3, y3, z3);
 	printf("%.16e %.16e %.16e\n", -(E1x - E0)/h, -(E1y - E0)/h, -(E1z - E0)/h);
 	printf("%.16e %.16e %.16e\n", fx1, fy1, fz1);
 	printf("\n");
 
-	E1x = edihedral0(0.5, x0, y0, z0, x1, y1, z1, x2 + h, y2, z2, x3, y3, z3);
-	E1y = edihedral0(0.5, x0, y0, z0, x1, y1, z1, x2, y2 + h, z2, x3, y3, z3);
-	E1z = edihedral0(0.5, x0, y0, z0, x1, y1, z1, x2, y2, z2 + h, x3, y3, z3);
+	E1x = edihedral0(0.5, 0.6, x0, y0, z0, x1, y1, z1, x2 + h, y2, z2, x3, y3, z3);
+	E1y = edihedral0(0.5, 0.6, x0, y0, z0, x1, y1, z1, x2, y2 + h, z2, x3, y3, z3);
+	E1z = edihedral0(0.5, 0.6, x0, y0, z0, x1, y1, z1, x2, y2, z2 + h, x3, y3, z3);
 	printf("%.16e %.16e %.16e\n", -(E1x - E0)/h, -(E1y - E0)/h, -(E1z - E0)/h);
 	printf("%.16e %.16e %.16e\n", fx2, fy2, fz2);
 

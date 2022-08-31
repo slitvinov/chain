@@ -29,7 +29,7 @@ force(struct params *C, int n, real *r, real *f)
 		j = i + 1;
 		k = i + 2;
 		l = i + 3;
-		fdihedral0(C->kd, 
+		fdihedral0(C->kd, C->phi0,
 		    r[3*i], r[3*i + 1], r[3*i + 2], 
 		    r[3*j], r[3*j + 1], r[3*j + 2], 
 		    r[3*k], r[3*k + 1], r[3*k + 2],
@@ -61,7 +61,7 @@ energy(struct params *C, int n, real *r, real *e)
 		j = i + 1;
 		k = i + 2;
 		l = i + 3;
-		e[2] += edihedral0(C->kd, 
+		e[2] += edihedral0(C->kd, C->phi0,
 		    r[3*i], r[3*i + 1], r[3*i + 2], 
 		    r[3*j], r[3*j + 1], r[3*j + 2], 
 		    r[3*k], r[3*k + 1], r[3*k + 2],
@@ -84,7 +84,7 @@ main(void)
 	real dt;
 
 	struct params C =  {
-		.kb = 1.0, .r0 = 1.0, .kth = 0.01, .th0 = 165 *  3.141592 / 180, .kd = -1e-4			};
+		.kb = 1.0, .r0 = 1.0, .kth = 0.0, .th0 = 165 *  3.141592 / 180, .kd = -1e-4, .phi0 = 170 * 3.141592 / 180			};
 	r = NULL;
 	n = N = 0;
 	while (scanf("%lf %lf %lf", &t[0], &t[1], &t[2]) == 3) {
@@ -102,7 +102,7 @@ main(void)
 		n++;
 	}
 	srand(1234);
-	dt = 0.025;
+	dt = 0.1;
 	f = malloc(3 * n * sizeof *f);
 	rp = malloc(3 * n * sizeof *f);
 	if (f == NULL) {
@@ -111,7 +111,7 @@ main(void)
 	}
 	for (i = 0; i < 3 * n; i++)
 		f[i] = 0;
-	for (j = 0; j < 1000000000; j++) {
+	for (j = 0; j < 100000000; j++) {
 		for (i = 0; i < 3 * n; i++)
 			rp[i] = r[i] + dt * f[i] / 2;
 		for (i = 0; i < 3 * n; i++)
@@ -119,7 +119,7 @@ main(void)
 		force(&C,n, rp, f);
 		for (i = 0; i < 3 * n; i++)
 			r[i] += dt * f[i];
-		if (j % 1000000 == 0) {
+		if (j % 100000 == 0) {
 			for (i = 0; i < n; i++)
 				printf("%.16e %.16e %.16e\n", r[3*i], r[3*i + 1], r[3*i + 2]);
 			printf("\n");

@@ -4,10 +4,16 @@
 #include "force.h"
 
 #define SMALL (0.001)
+#define SMALLER   (0.00001)
 #define TOLERANCE (0.05)
+#define MY_PI (3.14159265358979323846)
 
-static real Sqrt(real);
+static real Fabs(real);
 static real Acos(real);
+static real Sin(real);
+static real Max(real, real);
+static real Sqrt(real);
+
 void
 fbond0(real kb, real r0, real x0, real y0, real z0, real x1, real y1, real z1, real *fx0, real *fy0, real *fz0, real *fx1, real *fy1, real *fz1)
 {
@@ -115,7 +121,7 @@ real *fx2, real *fy2, real *fz2
 }
 
 void
-fdihedral0(real kth, real x0, real y0, real z0,
+fdihedral0(real kd, real phi0, real x0, real y0, real z0,
 real x1, real y1, real z1,
 real x2, real y2, real z2,
 real x3, real y3, real z3,
@@ -125,41 +131,47 @@ real *fx2, real *fy2, real *fz2,
 real *fx3, real *fy3, real *fz3
 )
 {
-	real ax;
-	real ay;
-	real az;
-	real bx;
-	real by;
-	real bz;
+	real a;
+	real a11;
+	real a12;
+	real a13;
+	real a22;
+	real a23;
+	real a33;
+	real b1mag;
+	real b1mag2;
+	real b2mag;
+	real b2mag2;
+	real b3mag;
+	real b3mag2;
 	real c;
-	real df;
-	real dtfx;
-	real dtfy;
-	real dtfz;
-	real dtgx;
-	real dtgy;
-	real dtgz;
-	real dthx;
-	real dthy;
-	real dthz;
+	real c0;
+	real c1mag;
+	real c2mag;
+	real ctmp;
+	real cx;
+	real cy;
+	real cz;
+	real dphi;
 	real f1[3];
 	real f2[3];
 	real f3[3];
 	real f4[3];
-	real fg;
-	real fga;
-	real gaa;
-	real gbb;
-	real hg;
-	real hgb;
-	real ra2inv;
-	real rabinv;
-	real rasq;
-	real rb2inv;
-	real rbsq;
-	real rg;
-	real rginv;
-	real rgsq;
+	real p;
+	real pd;
+	real phi;
+	real r12c1;
+	real r12c2;
+	real rb1;
+	real rb3;
+	real s1;
+	real s12;
+	real sb1;
+	real sb2;
+	real sb3;
+	real sc1;
+	real sc2;
+	real sin2;
 	real sx2;
 	real sy2;
 	real sz2;
@@ -175,9 +187,11 @@ real *fx3, real *fy3, real *fz3
 	real vb3x;
 	real vb3y;
 	real vb3z;
-	real df1;
-	real s;
-
+	real dx;
+	real cmag;
+	real s2;
+	real si;
+	real siinv;
 
 	vb1x = x0 - x1;
 	vb1y = y0 - y1;
@@ -194,74 +208,111 @@ real *fx3, real *fy3, real *fz3
 	vb3x = x3 - x2;
 	vb3y = y3 - y2;
 	vb3z = z3 - z2;
-	// c,s calculation
 
-	ax = vb1y*vb2zm - vb1z*vb2ym;
-	ay = vb1z*vb2xm - vb1x*vb2zm;
-	az = vb1x*vb2ym - vb1y*vb2xm;
-	bx = vb3y*vb2zm - vb3z*vb2ym;
-	by = vb3z*vb2xm - vb3x*vb2zm;
-	bz = vb3x*vb2ym - vb3y*vb2xm;
+	// c0 calculation
 
-	rasq = ax * ax + ay * ay + az * az;
-	rbsq = bx * bx + by * by + bz * bz;
-	rgsq = vb2xm * vb2xm + vb2ym * vb2ym + vb2zm * vb2zm;
-	rg = Sqrt(rgsq);
+	sb1 = 1.0 / (vb1x*vb1x + vb1y*vb1y + vb1z*vb1z);
+	sb2 = 1.0 / (vb2x*vb2x + vb2y*vb2y + vb2z*vb2z);
+	sb3 = 1.0 / (vb3x*vb3x + vb3y*vb3y + vb3z*vb3z);
 
-	rginv = ra2inv = rb2inv = 0.0;
-	if (rg > 0) rginv = 1.0 / rg;
-	if (rasq > 0) ra2inv = 1.0 / rasq;
-	if (rbsq > 0) rb2inv = 1.0 / rbsq;
-	rabinv = Sqrt(ra2inv * rb2inv);
+	rb1 = Sqrt(sb1);
+	rb3 = Sqrt(sb3);
 
-	c = (ax*bx + ay*by + az*bz)*rabinv;
-	s = rg * rabinv * (ax * vb3x + ay * vb3y + az * vb3z);
+	c0 = (vb1x*vb3x + vb1y*vb3y + vb1z*vb3z) * rb1*rb3;
+
+	// 1st and 2nd angle
+
+	b1mag2 = vb1x*vb1x + vb1y*vb1y + vb1z*vb1z;
+	b1mag = Sqrt(b1mag2);
+	b2mag2 = vb2x*vb2x + vb2y*vb2y + vb2z*vb2z;
+	b2mag = Sqrt(b2mag2);
+	b3mag2 = vb3x*vb3x + vb3y*vb3y + vb3z*vb3z;
+	b3mag = Sqrt(b3mag2);
+
+	ctmp = vb1x*vb2x + vb1y*vb2y + vb1z*vb2z;
+	r12c1 = 1.0 / (b1mag*b2mag);
+	c1mag = ctmp * r12c1;
+
+	ctmp = vb2xm*vb3x + vb2ym*vb3y + vb2zm*vb3z;
+	r12c2 = 1.0 / (b2mag*b3mag);
+	c2mag = ctmp * r12c2;
+
+	// cos and sin of 2 angles and final c
+
+	sin2 = Max(1.0 - c1mag*c1mag,0.0);
+	sc1 = Sqrt(sin2);
+	if (sc1 < SMALL) sc1 = SMALL;
+	sc1 = 1.0/sc1;
+
+	sin2 = Max(1.0 - c2mag*c2mag,0.0);
+	sc2 = Sqrt(sin2);
+	if (sc2 < SMALL) sc2 = SMALL;
+	sc2 = 1.0/sc2;
+
+	s1 = sc1 * sc1;
+	s2 = sc2 * sc2;
+	s12 = sc1 * sc2;
+	c = (c0 + c1mag*c2mag) * s12;
+
+	cx = vb1y*vb2z - vb1z*vb2y;
+	cy = vb1z*vb2x - vb1x*vb2z;
+	cz = vb1x*vb2y - vb1y*vb2x;
+	cmag = Sqrt(cx*cx + cy*cy + cz*cz);
+	dx = (cx*vb3x + cy*vb3y + cz*vb3z)/cmag/b3mag;
+
+	// error check
 
 	if (c > 1.0 + TOLERANCE || c < (-1.0 - TOLERANCE)) {
-		fprintf(stderr, "dihedral: tolerance\n");
-		exit(2);
+		fprintf(stderr, "error tollerance\n");
+		exit(1);
 	}
+
+
 	if (c > 1.0) c = 1.0;
 	if (c < -1.0) c = -1.0;
 
-	fg = vb1x * vb2xm + vb1y * vb2ym + vb1z * vb2zm;
-	hg = vb3x * vb2xm + vb3y * vb2ym + vb3z * vb2zm;
-	fga = fg * ra2inv * rginv;
-	hgb = hg * rb2inv * rginv;
-	gaa = -ra2inv * rg;
-	gbb = rb2inv * rg;
+	phi =Acos(c);
+	if (dx > 0.0) phi *= -1.0;
+	si = Sin(phi);
+	if (Fabs(si) < SMALLER) si = SMALLER;
+	siinv = 1.0/si;
 
-	dtfx = gaa * ax;
-	dtfy = gaa * ay;
-	dtfz = gaa * az;
-	dtgx = fga * ax - hgb * bx;
-	dtgy = fga * ay - hgb * by;
-	dtgz = fga * az - hgb * bz;
-	dthx = gbb * bx;
-	dthy = gbb * by;
-	dthz = gbb * bz;
+	dphi = phi - phi0;
+	if (dphi > MY_PI) dphi -= 2*MY_PI;
+	else if (dphi < -MY_PI) dphi += 2*MY_PI;
+	p = kd*dphi;
+	pd = - 2.0 * p * siinv;
+	p = p * dphi;
 
-	df = kth * s;
+	a = pd;
+	c = c * a;
+	s12 = s12 * a;
+	a11 = c*sb1*s1;
+	a22 = -sb2 * (2.0*c0*s12 - c*(s1+s2));
+	a33 = c*sb3*s2;
+	a12 = -r12c1 * (c1mag*c*s1 + c2mag*s12);
+	a13 = -rb1*rb3*s12;
+	a23 = r12c2 * (c2mag*c*s2 + c1mag*s12);
 
-	sx2 = df * dtgx;
-	sy2 = df * dtgy;
-	sz2 = df * dtgz;
+	sx2  = a12*vb1x + a22*vb2x + a23*vb3x;
+	sy2  = a12*vb1y + a22*vb2y + a23*vb3y;
+	sz2  = a12*vb1z + a22*vb2z + a23*vb3z;
 
-	f1[0] = df * dtfx;
-	f1[1] = df * dtfy;
-	f1[2] = df * dtfz;
+	f1[0] = a11*vb1x + a12*vb2x + a13*vb3x;
+	f1[1] = a11*vb1y + a12*vb2y + a13*vb3y;
+	f1[2] = a11*vb1z + a12*vb2z + a13*vb3z;
 
-	f2[0] = sx2 - f1[0];
-	f2[1] = sy2 - f1[1];
-	f2[2] = sz2 - f1[2];
+	f2[0] = -sx2 - f1[0];
+	f2[1] = -sy2 - f1[1];
+	f2[2] = -sz2 - f1[2];
 
-	f4[0] = df * dthx;
-	f4[1] = df * dthy;
-	f4[2] = df * dthz;
+	f4[0] = a13*vb1x + a23*vb2x + a33*vb3x;
+	f4[1] = a13*vb1y + a23*vb2y + a33*vb3y;
+	f4[2] = a13*vb1z + a23*vb2z + a33*vb3z;
 
-	f3[0] = -sx2 - f4[0];
-	f3[1] = -sy2 - f4[1];
-	f3[2] = -sz2 - f4[2];
+	f3[0] = sx2 - f4[0];
+	f3[1] = sy2 - f4[1];
+	f3[2] = sz2 - f4[2];
 
 	*fx0 += f1[0];
 	*fy0 += f1[1];
@@ -292,4 +343,22 @@ real
 Acos(real x)
 {
 	return acos(x);
+}
+
+real
+Sin(real x)
+{
+	return sin(x);
+}
+
+real
+Max(real x, real y)
+{
+	return x > y ? x : y;
+}
+
+real
+Fabs(real x)
+{
+	return x > 0 ? x : -x;
 }
